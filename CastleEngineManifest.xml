@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project 
+  name="BasicApp" 
+  standalone_source="BasicApp.lpr"
+  game_units="GameInitialize"
+  caption="Basic Mobile App"
+  qualified_name="com.peardox.Basic">
+  <package>
+    <include path="README.txt" />
+  </package>
+  <icons>
+    <icon path="icon.png" />
+  </icons>
+  <!--
+    Enable Android project integration with "services",
+    https://github.com/castle-engine/castle-engine/wiki/Android-Project-Services-Integrated-with-Castle-Game-Engine .
+    This automatically makes some features on Android work: sound, immersive mode.
+  -->
+  <compiler_options>
+    <custom_options>
+      <option>-dcgeapp</option>
+    </custom_options>
+  </compiler_options>
+  <android project_type="integrated" />
+  <version value="0.1.0" code="2" />
+</project>
