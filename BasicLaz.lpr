@@ -21,7 +21,7 @@ begin
   RequireDerivedFormResource:=True;
   Application.Scaled:=True;
   Application.Initialize;
-  Application.CreateForm(TCastleApp, CastleApp);
+  Application.CreateForm(TCastleForm, CastleForm);
   Application.Run;
 end.
 

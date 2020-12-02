@@ -1,4 +1,4 @@
-object CastleApp: TCastleApp
+object CastleForm: TCastleForm
   Left = 252
   Height = 240
   Top = 603
@@ -20,12 +20,5 @@ object CastleApp: TCastleApp
     TabOrder = 0
     OnOpen = WindowOpen
     OnClose = WindowClose
-    OnBeforeRender = WindowBeforeRender
-    OnRender = WindowRender
-    OnResize = WindowResize
-    OnPress = WindowPress
-    OnRelease = WindowRelease
-    OnMotion = WindowMotion
-    OnUpdate = WindowUpdate
   end
 end

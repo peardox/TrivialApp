@@ -5,11 +5,11 @@ unit MainGameUnit;
 interface
 
 uses
-  Classes, SysUtils,
+  Classes, SysUtils, CastleUIState,
   {$ifndef cgeapp}
-  Forms, Controls, Graphics, Dialogs, CastleControl, CastleLCLUtils,
+  Forms, Controls, Graphics, Dialogs, CastleControl,
   {$else}
-  CastleWindow,
+  CastleWindow, 
   {$endif}
   CastleControls, CastleColors, CastleUIControls,
   CastleTriangles, CastleShapes, CastleVectors,
@@ -21,48 +21,46 @@ uses
 type
   { TCastleApp }
 
-  {$ifndef cgeapp}
-  TCastleApp = class(TForm)
+{$ifndef cgeapp}
+
+  { TCastleForm }
+
+  TCastleForm = class(TForm)
     Window: TCastleControlBase;
     procedure FormDestroy(Sender: TObject);
-    procedure WindowBeforeRender(Sender: TObject);
-    procedure WindowClose(Sender: TObject);
-    procedure WindowMotion(Sender: TObject; const Event: TInputMotion);
-    procedure WindowOpen(Sender: TObject);
-    procedure WindowPress(Sender: TObject; const Event: TInputPressRelease);
-    procedure WindowRelease(Sender: TObject; const Event: TInputPressRelease);
-    procedure WindowRender(Sender: TObject);
-    procedure WindowResize(Sender: TObject);
-    procedure WindowUpdate(Sender: TObject);
     procedure FormCreate(Sender: TObject);
-  {$else}
-  TCastleApp = class(TWindowContainer)
-  {$endif}
+    procedure WindowClose(Sender: TObject);
+    procedure WindowOpen(Sender: TObject);
+  end;
+{$endif}
+
+  TCastleApp = class(TUIState)
+    procedure BeforeRender; override; // TCastleUserInterface
+    procedure Render; override; // TCastleUserInterface
+    procedure Resize; override; // TCastleUserInterface
+    procedure Update(const SecondsPassed: Single; var HandleInput: boolean); override; // TUIState
+    function  Motion(const Event: TInputMotion): Boolean; override; // TUIState
+    function  Press(const Event: TInputPressRelease): Boolean; override; // TUIState
+    function  Release(const Event: TInputPressRelease): Boolean; override; // TUIState
   private
     Viewport: TCastleViewport;
     Scene: TCastleScene;
-    GLIsReady: Boolean;
   public
-    procedure RunCGEApplication(Sender: TObject);
-    procedure KillCGEApplication(Sender: TObject);
-    procedure LoadScene(Sender: TObject; filename: String);
+    procedure Start; override; // TUIState
+    procedure Stop; override; // TUIState
+    procedure LoadScene(filename: String);
   end;
 
-{$ifndef cgeapp}
 var
+  GLIsReady: Boolean;
   CastleApp: TCastleApp;
+{$ifndef cgeapp}
+  CastleForm: TCastleForm;
 {$endif}
 
 {$ifdef cgeapp}
-procedure WindowBeforeRender(Sender: TUIContainer);
 procedure WindowClose(Sender: TUIContainer);
-procedure WindowMotion(Sender: TUIContainer; const Event: TInputMotion);
 procedure WindowOpen(Sender: TUIContainer);
-procedure WindowPress(Sender: TUIContainer; const Event: TInputPressRelease);
-procedure WindowRelease(Sender: TUIContainer; const Event: TInputPressRelease);
-procedure WindowRender(Sender: TUIContainer);
-procedure WindowResize(Sender: TUIContainer);
-procedure WindowUpdate(Sender: TUIContainer);
 {$endif}
 
 implementation
@@ -74,11 +72,7 @@ uses GameInitialize;
 {$R *.lfm}
 {$endif}
 
-{
-LoadScene - Load the initial model, set a viewport and a load of other one-off
-            things
-}
-procedure TCastleApp.LoadScene(Sender: TObject; filename: String);
+procedure TCastleApp.LoadScene(filename: String);
 begin
   // Set up the main viewport
   Viewport := TCastleViewport.Create(Application);
@@ -90,11 +84,7 @@ begin
   Viewport.AutoNavigation := False;
 
   // Add the viewport to the CGE control
-  {$ifndef cgeapp}
-  Window.Controls.InsertFront(Viewport);
-  {$else}
-  TCastleWindowBase(Sender).Controls.InsertFront(Viewport);
-  {$endif}
+  InsertFront(Viewport);
 
   Scene := TCastleScene.Create(Application);
   // Load a model into the scene
@@ -107,55 +97,69 @@ begin
   Viewport.Items.MainScene := Scene;
 end;
 
-{
-RunCGEApplication - Shared initialization
-}
-procedure TCastleApp.RunCGEApplication(Sender: TObject);
+procedure TCastleApp.Start;
 begin
-  GLIsReady := False;
   Scene := nil;
-  Window.Container.UIScaling := usDpiScale;
-  LoadScene(Sender, 'castle-data:/box_roty.x3dv');
+//  UIScaling := usDpiScale;
+  LoadScene('castle-data:/box_roty.x3dv');
 end;
 
-{
-KillCGEApplication - Shared tidy up
-}
-procedure TCastleApp.KillCGEApplication(Sender: TObject);
+procedure TCastleApp.Stop;
 begin
 end;
+
 
 {
 Lazarus only code
 }
 {$ifndef cgeapp}
-procedure TCastleApp.FormCreate(Sender: TObject);
+procedure TCastleForm.FormCreate(Sender: TObject);
 begin
+  GLIsReady := False;
   Caption := 'Basic CGE Lazarus Application';
-  RunCGEApplication(Sender);
 end;
 
-procedure TCastleApp.FormDestroy(Sender: TObject);
+procedure TCastleForm.FormDestroy(Sender: TObject);
 begin
-  KillCGEApplication(Sender);
 end;
 {$endif}
 
-{
-Lazarus / Standalone versions of all event handlers
-}
 {$ifdef cgeapp}
-procedure WindowBeforeRender(Sender: TUIContainer);
+procedure WindowOpen(Sender: TUIContainer);
 {$else}
-procedure TCastleApp.WindowBeforeRender(Sender: TObject);
+procedure TCastleForm.WindowOpen(Sender: TObject);
 {$endif}
+begin
+  GLIsReady := True;
+  {$ifndef cgeapp}
+  TCastleControlBase.MainControl := Window;
+  CastleApp := TCastleApp.Create(Application);
+  TUIState.Current := CastleApp;
+  CastleApp.Start;
+  {$else}
+  // Duplicated from ApplicationInitialize (still breaks)
+  if Application.MainWindow = nil then
+    Application.MainWindow := Window;
+  CastleApp := TCastleApp.Create(Application);
+  TUIState.Current := CastleApp;
+  {$endif}
+end;
+
+{$ifdef cgeapp}
+procedure WindowClose(Sender: TUIContainer);
+{$else}
+procedure TCastleForm.WindowClose(Sender: TObject);
+{$endif}
+begin
+end;
+
+procedure TCastleApp.BeforeRender;
 const
   // How many seconds to take to rotate the scene
   SecsPerRot = 4;
 var
   theta: Single;
 begin
-  {$ifdef cgeapp}with CastleApp do begin{$endif}
   if GLIsReady then
     begin
     // Set angle (theta) to revolve completely once every SecsPerRot
@@ -168,92 +172,33 @@ begin
 
     Scene.Rotation := Vector4(0, 1, 0, theta);
     end;
-  {$ifdef cgeapp}end;{$endif}
 end;
 
-{$ifdef cgeapp}
-procedure WindowClose(Sender: TUIContainer);
-{$else}
-procedure TCastleApp.WindowClose(Sender: TObject);
-{$endif}
+procedure TCastleApp.Render;
 begin
-  {$ifdef cgeapp}with CastleApp do begin{$endif}
-  {$ifdef cgeapp}end;{$endif}
 end;
 
-{$ifdef cgeapp}
-procedure WindowMotion(Sender: TUIContainer; const Event: TInputMotion);
-{$else}
-procedure TCastleApp.WindowMotion(Sender: TObject; const Event: TInputMotion);
-{$endif}
+procedure TCastleApp.Resize;
 begin
-  {$ifdef cgeapp}with CastleApp do begin{$endif}
-  {$ifdef cgeapp}end;{$endif}
 end;
 
-{$ifdef cgeapp}
-procedure WindowOpen(Sender: TUIContainer);
-{$else}
-procedure TCastleApp.WindowOpen(Sender: TObject);
-{$endif}
+procedure TCastleApp.Update(const SecondsPassed: Single; var HandleInput: boolean);
 begin
-  {$ifdef cgeapp}with CastleApp do begin{$endif}
-  GLIsReady := True;
-  {$ifdef cgeapp}end;{$endif}
 end;
 
-{$ifdef cgeapp}
-procedure WindowPress(Sender: TUIContainer;
-  const Event: TInputPressRelease);
-{$else}
-procedure TCastleApp.WindowPress(Sender: TObject;
-  const Event: TInputPressRelease);
-{$endif}
+function TCastleApp.Motion(const Event: TInputMotion): Boolean;
 begin
-  {$ifdef cgeapp}with CastleApp do begin{$endif}
-  {$ifdef cgeapp}end;{$endif}
+  Result := inherited;
 end;
 
-{$ifdef cgeapp}
-procedure WindowRelease(Sender: TUIContainer;
-  const Event: TInputPressRelease);
-{$else}
-procedure TCastleApp.WindowRelease(Sender: TObject;
-  const Event: TInputPressRelease);
-{$endif}
+function TCastleApp.Press(const Event: TInputPressRelease): Boolean;
 begin
-  {$ifdef cgeapp}with CastleApp do begin{$endif}
-  {$ifdef cgeapp}end;{$endif}
+  Result := inherited;
 end;
 
-{$ifdef cgeapp}
-procedure WindowRender(Sender: TUIContainer);
-{$else}
-procedure TCastleApp.WindowRender(Sender: TObject);
-{$endif}
+function    TCastleApp.Release(const Event: TInputPressRelease): Boolean;
 begin
-  {$ifdef cgeapp}with CastleApp do begin{$endif}
-  {$ifdef cgeapp}end;{$endif}
-end;
-
-{$ifdef cgeapp}
-procedure WindowResize(Sender: TUIContainer);
-{$else}
-procedure TCastleApp.WindowResize(Sender: TObject);
-{$endif}
-begin
-  {$ifdef cgeapp}with CastleApp do begin{$endif}
-  {$ifdef cgeapp}end;{$endif}
-end;
-
-{$ifdef cgeapp}
-procedure WindowUpdate(Sender: TUIContainer);
-{$else}
-procedure TCastleApp.WindowUpdate(Sender: TObject);
-{$endif}
-begin
-  {$ifdef cgeapp}with CastleApp do begin{$endif}
-  {$ifdef cgeapp}end;{$endif}
+  Result := inherited;
 end;
 
 end.

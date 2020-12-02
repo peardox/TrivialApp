@@ -13,7 +13,8 @@ uses
     {$info Thread support enabled.}
     {$ifdef UNIX} CThreads, {$endif}
   {$endif}
-  CastleApplicationProperties, CastleLog, CastleWindow, GameInitialize;
+  CastleApplicationProperties, CastleLog, CastleWindow, GameInitialize,
+  MainGameUnit;
 
 begin
   { Optionally you can specify here your application version.
@@ -31,6 +32,4 @@ begin
     without any extra output on Unix.
     This also allows to set --log-file from Application.ParseStandardParameters. }
   InitializeLog;
-
-  Application.MainWindow.OpenAndRun;
 end.

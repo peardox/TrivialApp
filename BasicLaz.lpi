@@ -36,7 +36,7 @@
         <PackageName Value="LCL"/>
       </Item3>
     </RequiredPackages>
-    <Units Count="2">
+    <Units Count="3">
       <Unit0>
         <Filename Value="BasicLaz.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -44,11 +44,16 @@
       <Unit1>
         <Filename Value="maingameunit.pas"/>
         <IsPartOfProject Value="True"/>
-        <ComponentName Value="CastleApp"/>
+        <ComponentName Value="CastleForm"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="MainGameUnit"/>
       </Unit1>
+      <Unit2>
+        <Filename Value="gameinitialize.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="GameInitialize"/>
+      </Unit2>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

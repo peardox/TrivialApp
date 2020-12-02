@@ -5,7 +5,7 @@ unit GameInitialize;
 interface
 
 uses
-  CastleWindow, CastleScene, CastleControls, CastleLog, 
+  CastleWindow, CastleScene, CastleControls, CastleLog, CastleUIState, 
   CastleTimeUtils, CastleApplicationProperties, MainGameUnit;
 
 var
@@ -17,18 +17,11 @@ implementation
 { One-time initialization of resources. }
 procedure ApplicationInitialize;
 begin
-  CastleApp := TCastleApp.Create(Window);
-  CastleApp.RunCGEApplication(Window);
-  Window.onBeforeRender := @WindowBeforeRender;
+  GLIsReady := False;
   Window.onClose := @WindowClose;
-  Window.onMotion := @WindowMotion;
   Window.onOpen := @WindowOpen;
-  Window.onPress := @WindowPress;
-  Window.onRelease := @WindowRelease;
-  Window.onRender := @WindowRender;
-  Window.onResize := @WindowResize;
-  Window.onUpdate := @WindowUpdate;
-  Window.Caption := 'Basic CGE Standalone Application';
+  CastleApp := TCastleApp.Create(Application);
+  TUIState.Current := CastleApp;
 end;
 
 initialization
@@ -47,11 +40,11 @@ initialization
 
   { Create and assign Application.MainWindow. }
   Window := TCastleWindowBase.Create(Application);
+  Window.Caption := 'Basic CGE Standalone Application';
+  Application.MainWindow := Window;
 
   { Initialize Application.OnInitialize. }
   Application.OnInitialize := @ApplicationInitialize;
-
-  Application.MainWindow := Window;
 
   { You should not need to do *anything* more in the unit "initialization" section.
     Most of your game initialization should happen inside ApplicationInitialize.
@@ -59,5 +52,6 @@ initialization
     (because in case of non-desktop platforms,
     some necessary resources may not be prepared yet). }
 
+  Application.MainWindow.OpenAndRun;
 end.
 

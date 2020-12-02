@@ -28,3 +28,7 @@ castle-engine package  --target=ios
 
 Install on a device or use simulator
 
+##### Credits
+
+Original model supplied by [Stuck Up Creations](https://stuckupcreations.itch.io/)
+
