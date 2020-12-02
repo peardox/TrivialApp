@@ -8,18 +8,17 @@ uses
   CastleWindow, CastleScene, CastleControls, CastleLog, CastleUIState, 
   CastleTimeUtils, CastleApplicationProperties, MainGameUnit;
 
-var
-  Window: TCastleWindowBase;
-  CastleApp: TCastleApp;
+procedure ApplicationInitialize;
 
 implementation
+
+var
+  Window: TCastleWindowBase;
 
 { One-time initialization of resources. }
 procedure ApplicationInitialize;
 begin
-  GLIsReady := False;
-  Window.onClose := @WindowClose;
-  Window.onOpen := @WindowOpen;
+  GLIsReady := true;
   CastleApp := TCastleApp.Create(Application);
   TUIState.Current := CastleApp;
 end;
@@ -51,7 +50,5 @@ initialization
     In particular, it is not allowed to read files before ApplicationInitialize
     (because in case of non-desktop platforms,
     some necessary resources may not be prepared yet). }
-
-  Application.MainWindow.OpenAndRun;
 end.
 
