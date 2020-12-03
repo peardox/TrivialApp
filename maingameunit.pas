@@ -58,10 +58,6 @@ var
   CastleForm: TCastleForm;
 {$endif}
 
-{$ifdef cgeapp}
-procedure WindowClose(Sender: TUIContainer);
-procedure WindowOpen(Sender: TUIContainer);
-{$endif}
 
 implementation
 {$ifdef cgeapp}
@@ -99,6 +95,7 @@ end;
 
 procedure TCastleApp.Start;
 begin
+  inherited;
   Scene := nil;
 //  UIScaling := usDpiScale;
   LoadScene('castle-data:/box_roty.x3dv');
@@ -106,6 +103,7 @@ end;
 
 procedure TCastleApp.Stop;
 begin
+  inherited;
 end;
 
 
@@ -122,36 +120,18 @@ end;
 procedure TCastleForm.FormDestroy(Sender: TObject);
 begin
 end;
-{$endif}
 
-{$ifdef cgeapp}
-procedure WindowOpen(Sender: TUIContainer);
-{$else}
 procedure TCastleForm.WindowOpen(Sender: TObject);
-{$endif}
 begin
   GLIsReady := True;
-  {$ifndef cgeapp}
   TCastleControlBase.MainControl := Window;
-  CastleApp := TCastleApp.Create(Application);
-  TUIState.Current := CastleApp;
-  CastleApp.Start;
-  {$else}
-  // Duplicated from ApplicationInitialize (still breaks)
-  if Application.MainWindow = nil then
-    Application.MainWindow := Window;
-  CastleApp := TCastleApp.Create(Application);
-  TUIState.Current := CastleApp;
-  {$endif}
+  ApplicationInitialize;
 end;
 
-{$ifdef cgeapp}
-procedure WindowClose(Sender: TUIContainer);
-{$else}
 procedure TCastleForm.WindowClose(Sender: TObject);
-{$endif}
 begin
 end;
+{$endif}
 
 procedure TCastleApp.BeforeRender;
 const
@@ -160,30 +140,31 @@ const
 var
   theta: Single;
 begin
-  if GLIsReady then
-    begin
-    // Set angle (theta) to revolve completely once every SecsPerRot
-    theta := ((CastleGetTickCount64 mod
-              (SecsPerRot * 1000)) /
-              (SecsPerRot * 1000)) * (Pi * 2);
+  inherited;
+  // Set angle (theta) to revolve completely once every SecsPerRot
+  theta := ((CastleGetTickCount64 mod
+            (SecsPerRot * 1000)) /
+            (SecsPerRot * 1000)) * (Pi * 2);
 
-    // Rotate the scene in Y
-    // Change to Vector4(1, 0, 0, theta); to rotate in X
+  // Rotate the scene in Y
+  // Change to Vector4(1, 0, 0, theta); to rotate in X
 
-    Scene.Rotation := Vector4(0, 1, 0, theta);
-    end;
+  Scene.Rotation := Vector4(0, 1, 0, theta);
 end;
 
 procedure TCastleApp.Render;
 begin
+  inherited;
 end;
 
 procedure TCastleApp.Resize;
 begin
+  inherited;
 end;
 
 procedure TCastleApp.Update(const SecondsPassed: Single; var HandleInput: boolean);
 begin
+  inherited;
 end;
 
 function TCastleApp.Motion(const Event: TInputMotion): Boolean;

@@ -32,4 +32,6 @@ begin
     without any extra output on Unix.
     This also allows to set --log-file from Application.ParseStandardParameters. }
   InitializeLog;
+  
+  Application.MainWindow.OpenAndRun;
 end.
