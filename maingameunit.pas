@@ -19,10 +19,7 @@ uses
   CastleImages, CastleTimeUtils, CastleKeysMouse;
 
 type
-  { TCastleApp }
-
 {$ifndef cgeapp}
-
   { TCastleForm }
 
   TCastleForm = class(TForm)
@@ -33,6 +30,8 @@ type
     procedure WindowOpen(Sender: TObject);
   end;
 {$endif}
+
+  { TCastleApp }
 
   TCastleApp = class(TUIState)
     procedure BeforeRender; override; // TCastleUserInterface
@@ -125,7 +124,8 @@ procedure TCastleForm.WindowOpen(Sender: TObject);
 begin
   GLIsReady := True;
   TCastleControlBase.MainControl := Window;
-  ApplicationInitialize;
+  CastleApp := TCastleApp.Create(Application);
+  TUIState.Current := CastleApp;
 end;
 
 procedure TCastleForm.WindowClose(Sender: TObject);
