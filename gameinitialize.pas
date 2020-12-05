@@ -5,6 +5,7 @@ unit GameInitialize;
 interface
 
 uses
+  SysUtils, // For FreeAndNil
   CastleWindow, CastleProgress, CastleScene, CastleControls, CastleLog, CastleUIState,
   CastleTimeUtils, CastleApplicationProperties, CastleUIControls, MainGameUnit;
 
@@ -25,7 +26,8 @@ begin
   if not IsLibrary then
     InitializeLog;
   Window.Container.UIScaling := usDpiScale;
-  Progress.UserInterface := AppProgress.Create;
+  AppProgress := TAppProgress.Create;
+  Progress.UserInterface := AppProgress;
 end;
 
 initialization
@@ -55,5 +57,7 @@ initialization
     In particular, it is not allowed to read files before ApplicationInitialize
     (because in case of non-desktop platforms,
     some necessary resources may not be prepared yet). }
+finalization
+  FreeAndNil(AppProgress);
 end.
 

@@ -78,8 +78,10 @@ type
 
 var
   GLIsReady: Boolean;
+  ProgSteps: Cardinal;
   CastleApp: TCastleApp;
   AppProgress: TAppProgress;
+
 {$ifndef cgeapp}
   CastleForm: TCastleForm;
 {$endif}
@@ -102,6 +104,7 @@ procedure TAppProgress.Update(Progress: TProgress);
 begin
   inherited;
   CastleApp.LabelProgress.Caption := 'Progress : ' + IntToStr(Progress.Position) + ' of ' + IntToStr(Progress.Max);
+  WriteLnLog('Step');
 end;
 
 procedure TAppProgress.Init(Progress: TProgress);
@@ -113,7 +116,7 @@ end;
 procedure TAppProgress.Fini(Progress: TProgress);
 begin
   inherited;
-  CastleApp.LabelProgress.Caption := 'Progress : Completed';
+  CastleApp.LabelProgress.Caption := 'Progress : Completed ' + IntToStr(ProgSteps) + ' steps';
 end;
 
 procedure TCastleApp.PointlessButtonClick(Sender: TObject);
@@ -153,10 +156,7 @@ begin
 end;
 
 procedure TCastleApp.LoadViewport;
-var
-  ProfileStart: TCastleProfilerTime;
 begin
-  ProfileStart := Profiler.Start('Viewport loading profile');
   // Set up the main viewport
   Viewport := TCastleViewport.Create(Application);
   // Use all the viewport
@@ -179,75 +179,51 @@ begin
   CreateLabel(LabelFPS, 1);
   CreateLabel(LabelRender, 0);
   CreateButton(PointlessButton, 'The Completely Pointless Load Botton', 5, @PointlessButtonClick);
-
-  Profiler.Stop(ProfileStart, True);
 end;
 
 procedure TCastleApp.LoadScene(filename: String);
 var
   ProfileStart: TCastleProfilerTime;
 begin
-  Progress.UserInterface := AppProgress.Create;
+  Progress.Init(100, 'Preparing Scene');
   try
-    Progress.Init(100, 'Preparing Scene');
     try
-      try
-        ProfileStart := Profiler.Start('Scene loading profile - ' + filename);
-        Scene := TCastleScene.Create(Application);
-        // Load a model into the scene
-        Scene.Load(filename);
+      ProfileStart := Profiler.Start('Scene loading profile - ' + filename);
+      Progress.Step; // So it's called at least once
 
-        Scene.Spatial := [ssStaticCollisions];
+      Scene := TCastleScene.Create(Application);
+      Scene.Spatial := [ssStaticCollisions, ssDynamicCollisions, ssRendering];
+      Scene.Load(filename);
+      ProgSteps := Scene.PrepareResourcesSteps;
+      Scene.PrepareResources([prSpatial, prRenderSelf, prRenderClones, prScreenEffects],
+          True,
+          Viewport.PrepareParams);
 
-        Scene.PrepareResources([prSpatial, prRenderSelf, prRenderClones, prScreenEffects],
-            false,
-            Viewport.PrepareParams);
+      // Add the scene to the viewport
+      Viewport.Items.Add(Scene);
 
-        // Add the scene to the viewport
-        Viewport.Items.Add(Scene);
+      // Tell the control this is the main scene so it gets some lighting
+      Viewport.Items.MainScene := Scene;
 
-        // Tell the control this is the main scene so it gets some lighting
-        Viewport.Items.MainScene := Scene;
+      Viewport.SetCamera;
 
-        Viewport.SetCamera;
-
-        Profiler.Stop(ProfileStart, True);
-      except
-        on E : Exception do
-          begin
-            WriteLnLog('Oops #2' + LineEnding + E.ClassName + LineEnding + E.Message);
-           end;
-      end;
-    finally
-      Progress.Fini;
+      Profiler.Stop(ProfileStart, True);
+    except
+      on E : Exception do
+        begin
+          WriteLnLog('Oops #2' + LineEnding + E.ClassName + LineEnding + E.Message);
+         end;
     end;
-  except
-    on E : Exception do
-      begin
-        WriteLnLog('Oops #1' + LineEnding + E.ClassName + LineEnding + E.Message);
-       end;
+  finally
+    Progress.Fini;
   end;
-
 end;
 
 procedure TCastleApp.Start;
-var
-  ProcTimer: Int64;
 begin
   inherited;
   Scene := nil;
-
-  ProcTimer := CastleGetTickCount64;
   LoadViewport;
-  if ApplicationProperties.IsGLContextOpen then
-    begin
-    WriteLnLog('Running Viewport.PrepareResources');
-    Viewport.PrepareResources('Loading Viewport');
-    end
-  else
-    WriteLnLog('Viewport.PrepareResources - not ApplicationProperties.IsGLContextOpen');
-  ProcTimer := CastleGetTickCount64 - ProcTimer;
-  WriteLnLog('ProcTimer (LoadViewport) = ' + FormatFloat('####0.000', ProcTimer / 1000) + ' seconds');
 end;
 
 procedure TCastleApp.Stop;
@@ -279,10 +255,13 @@ begin
   CastleApp := TCastleApp.Create(Application);
   TUIState.Current := CastleApp;
   Window.Container.UIScaling := usDpiScale;
+  AppProgress := TAppProgress.Create;
+  Progress.UserInterface := AppProgress;
 end;
 
 procedure TCastleForm.WindowClose(Sender: TObject);
 begin
+  FreeAndNil(AppProgress);
 end;
 {$endif}
 
