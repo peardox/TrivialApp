@@ -187,37 +187,45 @@ procedure TCastleApp.LoadScene(filename: String);
 var
   ProfileStart: TCastleProfilerTime;
 begin
-  Progress.Init(100, 'Preparing Scene');
+  Progress.UserInterface := AppProgress.Create;
   try
+    Progress.Init(100, 'Preparing Scene');
     try
-      ProfileStart := Profiler.Start('Scene loading profile - ' + filename);
-      Scene := TCastleScene.Create(Application);
-      // Load a model into the scene
-      Scene.Load(filename);
+      try
+        ProfileStart := Profiler.Start('Scene loading profile - ' + filename);
+        Scene := TCastleScene.Create(Application);
+        // Load a model into the scene
+        Scene.Load(filename);
 
-      Scene.Spatial := [ssStaticCollisions];
+        Scene.Spatial := [ssStaticCollisions];
 
-      Scene.PrepareResources([prSpatial, prRenderSelf, prRenderClones, prScreenEffects],
-          false,
-          Viewport.PrepareParams);
+        Scene.PrepareResources([prSpatial, prRenderSelf, prRenderClones, prScreenEffects],
+            false,
+            Viewport.PrepareParams);
 
-      // Add the scene to the viewport
-      Viewport.Items.Add(Scene);
+        // Add the scene to the viewport
+        Viewport.Items.Add(Scene);
 
-      // Tell the control this is the main scene so it gets some lighting
-      Viewport.Items.MainScene := Scene;
+        // Tell the control this is the main scene so it gets some lighting
+        Viewport.Items.MainScene := Scene;
 
-      Viewport.SetCamera;
+        Viewport.SetCamera;
 
-      Profiler.Stop(ProfileStart, True);
-    except
-      on E : Exception do
-        begin
-          WriteLnLog('Oops' + LineEnding + E.ClassName + LineEnding + E.Message);
-         end;
+        Profiler.Stop(ProfileStart, True);
+      except
+        on E : Exception do
+          begin
+            WriteLnLog('Oops #2' + LineEnding + E.ClassName + LineEnding + E.Message);
+           end;
+      end;
+    finally
+      Progress.Fini;
     end;
-  finally
-    Progress.Fini;
+  except
+    on E : Exception do
+      begin
+        WriteLnLog('Oops #1' + LineEnding + E.ClassName + LineEnding + E.Message);
+       end;
   end;
 
 end;
@@ -271,7 +279,6 @@ begin
   CastleApp := TCastleApp.Create(Application);
   TUIState.Current := CastleApp;
   Window.Container.UIScaling := usDpiScale;
-  Progress.UserInterface := AppProgress.Create;
 end;
 
 procedure TCastleForm.WindowClose(Sender: TObject);
