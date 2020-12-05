@@ -5,7 +5,7 @@ unit GameInitialize;
 interface
 
 uses
-  CastleWindow, CastleScene, CastleControls, CastleLog, CastleUIState, 
+  CastleWindow, CastleProgress, CastleScene, CastleControls, CastleLog, CastleUIState,
   CastleTimeUtils, CastleApplicationProperties, CastleUIControls, MainGameUnit;
 
 procedure ApplicationInitialize;
@@ -25,6 +25,7 @@ begin
   if not IsLibrary then
     InitializeLog;
   Window.Container.UIScaling := usDpiScale;
+  Progress.UserInterface := AppProgress.Create;
 end;
 
 initialization

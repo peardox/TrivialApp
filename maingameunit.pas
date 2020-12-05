@@ -5,7 +5,7 @@ unit MainGameUnit;
 interface
 
 uses
-  Classes, SysUtils, Math, CastleUIState,
+  Classes, SysUtils, Math, CastleUIState, CastleProgress,
   {$ifndef cgeapp}
   Forms, Controls, Graphics, Dialogs, CastleControl,
   {$else}
@@ -13,10 +13,11 @@ uses
   {$endif}
   CastleControls, CastleColors, CastleUIControls,
   CastleTriangles, CastleShapes, CastleVectors,
-  CastleCameras, CastleApplicationProperties, CastleLog,
-  CastleSceneCore, CastleScene, CastleViewport,
-  X3DNodes, X3DFields, X3DTIme, CastleTransform,
-  CastleImages, CastleTimeUtils, CastleKeysMouse;
+  CastleSceneCore, CastleScene, CastleTransform,
+  CastleViewport, CastleCameras,
+  X3DNodes, X3DFields, X3DTIme,
+  CastleImages,
+  CastleApplicationProperties, CastleLog, CastleTimeUtils, CastleKeysMouse;
 
 type
 {$ifndef cgeapp}
@@ -37,6 +38,13 @@ type
     procedure SetCamera(const AWidth: Single = 1; const AHeight: Single = 1; const Depth: Single = 1.0);
   end;
 
+  { ProgressNullInterface }
+  TAppProgress = class(TProgressNullInterface)
+    procedure Init(Progress: TProgress); override;
+    procedure Update(Progress: TProgress); override;
+    procedure Fini(Progress: TProgress); override;
+  end;
+
   { TCastleApp }
 
   TCastleApp = class(TUIState)
@@ -52,6 +60,7 @@ type
     Viewport: TCastleViewport;
     Scene: TCastleScene;
     LabelFPS: TCastleLabel;
+    LabelProgress: TCastleLabel;
     LabelCamPos: TCastleLabel;
     LabelCamDir: TCastleLabel;
     LabelCamUp: TCastleLabel;
@@ -70,6 +79,7 @@ type
 var
   GLIsReady: Boolean;
   CastleApp: TCastleApp;
+  AppProgress: TAppProgress;
 {$ifndef cgeapp}
   CastleForm: TCastleForm;
 {$endif}
@@ -87,6 +97,24 @@ uses GameInitialize;
 {$ifndef cgeapp}
 {$R *.lfm}
 {$endif}
+
+procedure TAppProgress.Update(Progress: TProgress);
+begin
+  inherited;
+  CastleApp.LabelProgress.Caption := 'Progress : ' + IntToStr(Progress.Position) + ' of ' + IntToStr(Progress.Max);
+end;
+
+procedure TAppProgress.Init(Progress: TProgress);
+begin
+  inherited;
+  CastleApp.LabelProgress.Caption := 'Progress : Starting';
+end;
+
+procedure TAppProgress.Fini(Progress: TProgress);
+begin
+  inherited;
+  CastleApp.LabelProgress.Caption := 'Progress : Completed';
+end;
 
 procedure TCastleApp.PointlessButtonClick(Sender: TObject);
 var
@@ -147,6 +175,7 @@ begin
   CreateLabel(LabelCamPos, 0, False);
   CreateLabel(LabelCamDir, 1, False);
   CreateLabel(LabelCamUp, 2, False);
+  CreateLabel(LabelProgress, 2);
   CreateLabel(LabelFPS, 1);
   CreateLabel(LabelRender, 0);
   CreateButton(PointlessButton, 'The Completely Pointless Load Botton', 5, @PointlessButtonClick);
@@ -158,26 +187,39 @@ procedure TCastleApp.LoadScene(filename: String);
 var
   ProfileStart: TCastleProfilerTime;
 begin
-  ProfileStart := Profiler.Start('Scene loading profile - ' + filename);
-  Scene := TCastleScene.Create(Application);
-  // Load a model into the scene
-  Scene.Load(filename);
+  Progress.Init(100, 'Preparing Scene');
+  try
+    try
+      ProfileStart := Profiler.Start('Scene loading profile - ' + filename);
+      Scene := TCastleScene.Create(Application);
+      // Load a model into the scene
+      Scene.Load(filename);
 
-  Scene.Spatial := [ssStaticCollisions];
+      Scene.Spatial := [ssStaticCollisions];
 
-  Scene.PrepareResources([prSpatial, prRenderSelf, prRenderClones, prScreenEffects],
-      false,
-      Viewport.PrepareParams);
+      Scene.PrepareResources([prSpatial, prRenderSelf, prRenderClones, prScreenEffects],
+          false,
+          Viewport.PrepareParams);
 
-  // Add the scene to the viewport
-  Viewport.Items.Add(Scene);
+      // Add the scene to the viewport
+      Viewport.Items.Add(Scene);
 
-  // Tell the control this is the main scene so it gets some lighting
-  Viewport.Items.MainScene := Scene;
+      // Tell the control this is the main scene so it gets some lighting
+      Viewport.Items.MainScene := Scene;
 
-  Viewport.SetCamera;
+      Viewport.SetCamera;
 
-  Profiler.Stop(ProfileStart, True);
+      Profiler.Stop(ProfileStart, True);
+    except
+      on E : Exception do
+        begin
+          WriteLnLog('Oops' + LineEnding + E.ClassName + LineEnding + E.Message);
+         end;
+    end;
+  finally
+    Progress.Fini;
+  end;
+
 end;
 
 procedure TCastleApp.Start;
@@ -229,6 +271,7 @@ begin
   CastleApp := TCastleApp.Create(Application);
   TUIState.Current := CastleApp;
   Window.Container.UIScaling := usDpiScale;
+  Progress.UserInterface := AppProgress.Create;
 end;
 
 procedure TCastleForm.WindowClose(Sender: TObject);
