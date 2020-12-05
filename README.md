@@ -20,15 +20,11 @@ castle-engine compile
 
 castle-engine package  --target=android
 
-Install lpk on a device
+Install BasicApp-debug.apk / BasicApp-release.apk on a device
 
 ##### To compile from the command line for iOS
 
 castle-engine package  --target=ios
 
 Install on a device or use simulator
-
-##### Credits
-
-Original model supplied by [Stuck Up Creations](https://stuckupcreations.itch.io/)
 

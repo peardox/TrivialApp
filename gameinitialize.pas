@@ -6,7 +6,7 @@ interface
 
 uses
   CastleWindow, CastleScene, CastleControls, CastleLog, CastleUIState, 
-  CastleTimeUtils, CastleApplicationProperties, MainGameUnit;
+  CastleTimeUtils, CastleApplicationProperties, CastleUIControls, MainGameUnit;
 
 procedure ApplicationInitialize;
 
@@ -21,6 +21,10 @@ begin
   GLIsReady := true;
   CastleApp := TCastleApp.Create(Application);
   TUIState.Current := CastleApp;
+  Profiler.Enabled := true;
+  if not IsLibrary then
+    InitializeLog;
+  Window.Container.UIScaling := usDpiScale;
 end;
 
 initialization
