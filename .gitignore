@@ -33,7 +33,7 @@ backup/
 *.bak
 lib/
 castle-engine-output/
-data/
+# data/
 
 # Application bundle for Mac OS
 *.app/
