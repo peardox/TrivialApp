@@ -2,7 +2,7 @@
 <project 
   name="BasicApp" 
   standalone_source="BasicApp.lpr"
-  game_units="AppInitialize"
+  game_units="AppInitialization"
   caption="Basic Mobile App"
   qualified_name="com.peardox.Basic">
   <package>
