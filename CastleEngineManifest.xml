@@ -9,6 +9,7 @@
     <include path="README.txt" />
   </package>
   <icons>
+    <icon path="icon.ico" />
     <icon path="icon.png" />
   </icons>
   <!--
