@@ -85,21 +85,23 @@ uses GUIInitialization;
 
 procedure TAppProgress.Update(Progress: TProgress);
 begin
-  inherited;
   CastleApp.LabelProgress.Caption := 'Progress : ' + IntToStr(Progress.Position) + ' of ' + IntToStr(Progress.Max);
-  WriteLnLog('Step');
+  WriteLnLog('Update : ' + IntToStr(Progress.Position) + ' of ' + IntToStr(Progress.Max));
+  inherited;
 end;
 
 procedure TAppProgress.Init(Progress: TProgress);
 begin
-  inherited;
   CastleApp.LabelProgress.Caption := 'Progress : Starting';
+  WriteLnLog('Init : ' + IntToStr(Progress.Position) + ' of ' + IntToStr(Progress.Max));
+  inherited;
 end;
 
 procedure TAppProgress.Fini(Progress: TProgress);
 begin
-  inherited;
   CastleApp.LabelProgress.Caption := 'Progress : Completed ' + IntToStr(ProgSteps) + ' steps';
+  WriteLnLog('Fini : ' + IntToStr(Progress.Position) + ' of ' + IntToStr(Progress.Max));
+  inherited;
 end;
 
 procedure TCastleApp.PointlessButtonClick(Sender: TObject);
