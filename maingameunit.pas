@@ -9,7 +9,7 @@ uses
   {$ifndef cgeapp}
   Forms, Controls, Graphics, Dialogs, CastleControl,
   {$else}
-  CastleWindow, 
+  CastleWindow,
   {$endif}
   CastleControls, CastleColors, CastleUIControls,
   CastleTriangles, CastleShapes, CastleVectors,
@@ -20,18 +20,6 @@ uses
   CastleApplicationProperties, CastleLog, CastleTimeUtils, CastleKeysMouse;
 
 type
-{$ifndef cgeapp}
-  { TCastleForm }
-
-  TCastleForm = class(TForm)
-    Window: TCastleControlBase;
-    procedure FormDestroy(Sender: TObject);
-    procedure FormCreate(Sender: TObject);
-    procedure WindowClose(Sender: TObject);
-    procedure WindowOpen(Sender: TObject);
-  end;
-{$endif}
-
   TCastleViewportHelper = class helper for TCastleViewport
   public
     function ViewportToWorld: TVector2;
@@ -82,10 +70,6 @@ var
   CastleApp: TCastleApp;
   AppProgress: TAppProgress;
 
-{$ifndef cgeapp}
-  CastleForm: TCastleForm;
-{$endif}
-
 const
   RotateScene: Boolean = False;
   SecsPerRot: Single = 12;
@@ -93,11 +77,9 @@ const
 
 implementation
 {$ifdef cgeapp}
-uses GameInitialize;
-{$endif}
-
-{$ifndef cgeapp}
-{$R *.lfm}
+uses AppInitialization;
+{$else}
+uses GUIInitialization;
 {$endif}
 
 procedure TAppProgress.Update(Progress: TProgress);
@@ -230,40 +212,6 @@ procedure TCastleApp.Stop;
 begin
   inherited;
 end;
-
-
-{
-Lazarus only code
-}
-{$ifndef cgeapp}
-procedure TCastleForm.FormCreate(Sender: TObject);
-begin
-  GLIsReady := False;
-  Profiler.Enabled := true;
-  InitializeLog;
-  Caption := 'Basic CGE Lazarus Application';
-end;
-
-procedure TCastleForm.FormDestroy(Sender: TObject);
-begin
-end;
-
-procedure TCastleForm.WindowOpen(Sender: TObject);
-begin
-  GLIsReady := True;
-  TCastleControlBase.MainControl := Window;
-  CastleApp := TCastleApp.Create(Application);
-  TUIState.Current := CastleApp;
-  Window.Container.UIScaling := usDpiScale;
-  AppProgress := TAppProgress.Create;
-  Progress.UserInterface := AppProgress;
-end;
-
-procedure TCastleForm.WindowClose(Sender: TObject);
-begin
-  FreeAndNil(AppProgress);
-end;
-{$endif}
 
 procedure TCastleApp.BeforeRender;
 var

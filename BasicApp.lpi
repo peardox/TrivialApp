@@ -50,9 +50,9 @@
         <UnitName Value="MainGameUnit"/>
       </Unit1>
       <Unit2>
-        <Filename Value="gameinitialize.pas"/>
+        <Filename Value="appinitialization.pas"/>
         <IsPartOfProject Value="True"/>
-        <UnitName Value="GameInitialize"/>
+        <UnitName Value="AppInitialization"/>
       </Unit2>
     </Units>
   </ProjectOptions>

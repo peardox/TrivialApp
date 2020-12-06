@@ -1,4 +1,4 @@
-unit GameInitialize;
+unit AppInitialization;
 
 {$mode objfpc}{$H+}
 

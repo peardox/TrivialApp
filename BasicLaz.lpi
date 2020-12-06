@@ -42,17 +42,17 @@
         <IsPartOfProject Value="True"/>
       </Unit0>
       <Unit1>
-        <Filename Value="maingameunit.pas"/>
+        <Filename Value="guiinitialization.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="CastleForm"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <UnitName Value="MainGameUnit"/>
+        <UnitName Value="GUIInitialization"/>
       </Unit1>
       <Unit2>
-        <Filename Value="gameinitialize.pas"/>
+        <Filename Value="maingameunit.pas"/>
         <IsPartOfProject Value="True"/>
-        <UnitName Value="GameInitialize"/>
+        <UnitName Value="MainGameUnit"/>
       </Unit2>
     </Units>
   </ProjectOptions>

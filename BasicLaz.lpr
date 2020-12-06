@@ -12,7 +12,7 @@ uses
   cthreads,
   {$ENDIF}{$ENDIF}
   Interfaces, // this includes the LCL widgetset
-  Forms, MainGameUnit, castle_components, castle_base
+  Forms, GUIInitialization, castle_components, castle_base
   { you can add units after this };
 
 {$R *.res}
