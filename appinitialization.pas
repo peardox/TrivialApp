@@ -19,12 +19,12 @@ var
 { One-time initialization of resources. }
 procedure ApplicationInitialize;
 begin
-  GLIsReady := true;
-  CastleApp := TCastleApp.Create(Application);
-  TUIState.Current := CastleApp;
   Profiler.Enabled := true;
   if not IsLibrary then
     InitializeLog;
+  GLIsReady := true;
+  CastleApp := TCastleApp.Create(Application);
+  TUIState.Current := CastleApp;
   Window.Container.UIScaling := usDpiScale;
   AppProgress := TAppProgress.Create;
   Progress.UserInterface := AppProgress;
