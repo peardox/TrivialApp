@@ -16,6 +16,8 @@ uses
   CastleApplicationProperties, CastleLog, CastleWindow, AppInitialization,
   MainGameUnit;
 
+{$R *.res}
+
 begin
   { Optionally you can specify here your application version.
     It will appear e.g. in the log and in the --help output.

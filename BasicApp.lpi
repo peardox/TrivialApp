@@ -12,6 +12,7 @@
       <Title Value="BasicApp"/>
       <UseAppBundle Value="False"/>
       <ResourceType Value="res"/>
+      <Icon Value="0"/>
     </General>
     <i18n>
       <EnableI18N LFM="False"/>
@@ -70,9 +71,6 @@
         <ShowHints Value="False"/>
       </Verbosity>
       <CustomOptions Value="-dcgeapp"/>
-      <OtherDefines Count="1">
-        <Define0 Value="cgeapp"/>
-      </OtherDefines>
     </Other>
   </CompilerOptions>
   <Debugging>
