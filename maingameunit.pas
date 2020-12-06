@@ -16,7 +16,7 @@ uses
   CastleSceneCore, CastleScene, CastleTransform,
   CastleViewport, CastleCameras,
   X3DNodes, X3DFields, X3DTIme,
-  CastleImages,
+  CastleImages, CastleSoundEngine,
   CastleApplicationProperties, CastleLog, CastleTimeUtils, CastleKeysMouse;
 
 type
@@ -54,6 +54,7 @@ type
     LabelCamUp: TCastleLabel;
     LabelRender: TCastleLabel;
     WalkNavigation: TCastleWalkNavigation;
+    Buffer: TSoundBuffer;
   public
     procedure PointlessButtonClick(Sender: TObject);
     procedure CreateButton(var objButton: TCastleButton; const ButtonText: String; const Line: Integer; const ButtonCode: TNotifyEvent = nil);
@@ -193,7 +194,7 @@ begin
     except
       on E : Exception do
         begin
-          WriteLnLog('Oops #2' + LineEnding + E.ClassName + LineEnding + E.Message);
+          WriteLnLog('Oops #1' + LineEnding + E.ClassName + LineEnding + E.Message);
          end;
     end;
   finally
@@ -206,6 +207,8 @@ begin
   inherited;
   Scene := nil;
   LoadViewport;
+  Buffer := SoundEngine.LoadBuffer('castle-data:/music/FurElise.ogg');
+  SoundEngine.PlaySound(Buffer);
 end;
 
 procedure TCastleApp.Stop;
