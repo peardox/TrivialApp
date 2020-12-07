@@ -34,6 +34,9 @@ implementation
 
 procedure TCastleForm.FormCreate(Sender: TObject);
 begin
+  {$ifdef darwin}
+  WindowState := wsFullScreen;
+  {$endif}
   GLIsReady := False;
   Profiler.Enabled := true;
   InitializeLog;
