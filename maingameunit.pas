@@ -53,6 +53,7 @@ type
     LabelCamDir: TCastleLabel;
     LabelCamUp: TCastleLabel;
     LabelRender: TCastleLabel;
+    LabelSceneLoad: TCastleLabel;
     WalkNavigation: TCastleWalkNavigation;
     Buffer: TSoundBuffer;
   public
@@ -113,6 +114,7 @@ begin
   LoadScene(SceneFile);
   ProcTimer := CastleGetTickCount64 - ProcTimer;
   WriteLnLog('ProcTimer (LoadScene) = ' + FormatFloat('####0.000', ProcTimer / 1000) + ' seconds');
+  LabelSceneLoad.Caption := 'LoadScene = ' + FormatFloat('####0.000', ProcTimer / 1000) + ' seconds'
 end;
 
 procedure TCastleApp.CreateButton(var objButton: TCastleButton; const ButtonText: String; const Line: Integer; const ButtonCode: TNotifyEvent = nil);
@@ -160,6 +162,8 @@ begin
   CreateLabel(LabelCamPos, 0, False);
   CreateLabel(LabelCamDir, 1, False);
   CreateLabel(LabelCamUp, 2, False);
+
+  CreateLabel(LabelSceneLoad, 3);
   CreateLabel(LabelProgress, 2);
   CreateLabel(LabelFPS, 1);
   CreateLabel(LabelRender, 0);
