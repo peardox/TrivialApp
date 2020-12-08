@@ -1,6 +1,7 @@
 unit MainGameUnit;
 
 {$mode objfpc}{$H+}
+// {$define logall}
 
 interface
 
@@ -26,7 +27,7 @@ type
     procedure SetCamera(const AWidth: Single = 1; const AHeight: Single = 1; const Depth: Single = 1.0);
   end;
 
-  { ProgressNullInterface }
+  { ProgressInterface }
   TAppProgress = class(TProgressNullInterface)
     procedure Init(Progress: TProgress); override;
     procedure Update(Progress: TProgress); override;
@@ -67,6 +68,7 @@ type
   end;
 
 var
+  AppTime: Int64;
   GLIsReady: Boolean;
   ProgSteps: Cardinal;
   CastleApp: TCastleApp;
@@ -86,22 +88,38 @@ uses GUIInitialization;
 
 procedure TAppProgress.Update(Progress: TProgress);
 begin
-  CastleApp.LabelProgress.Caption := 'Progress : ' + IntToStr(Progress.Position) + ' of ' + IntToStr(Progress.Max);
-  WriteLnLog('Update : ' + IntToStr(Progress.Position) + ' of ' + IntToStr(Progress.Max));
+  // Investigate CastleSceneCode #7767
+  CastleApp.LabelProgress.Caption := 'Progress : ' + FormatFloat('####0.000', (CastleGetTickCount64 - AppTime) / 1000) + ' : ' + IntToStr(Progress.Position) + ' of ' + IntToStr(Progress.Max);
+  WriteLnLog('Progress Update : ' + FormatFloat('####0.000', (CastleGetTickCount64 - AppTime) / 1000) + ' : ' + IntToStr(Progress.Position) + ' of ' + IntToStr(Progress.Max));
+  {$ifndef cgeapp}
+  Application.ProcessMessages;
+  {$else}
+  Application.ProcessAllMessages;
+  {$endif}
   inherited;
 end;
 
 procedure TAppProgress.Init(Progress: TProgress);
 begin
   CastleApp.LabelProgress.Caption := 'Progress : Starting';
-  WriteLnLog('Init : ' + IntToStr(Progress.Position) + ' of ' + IntToStr(Progress.Max));
+  WriteLnLog('Progress Init : ' + IntToStr(Progress.Position) + ' of ' + IntToStr(Progress.Max));
+  {$ifndef cgeapp}
+  Application.ProcessMessages;
+  {$else}
+  Application.ProcessAllMessages;
+  {$endif}
   inherited;
 end;
 
 procedure TAppProgress.Fini(Progress: TProgress);
 begin
   CastleApp.LabelProgress.Caption := 'Progress : Completed ' + IntToStr(ProgSteps) + ' steps';
-  WriteLnLog('Fini : ' + IntToStr(Progress.Position) + ' of ' + IntToStr(Progress.Max));
+  WriteLnLog('Progress Fini : ' + FormatFloat('####0.000', (CastleGetTickCount64 - AppTime) / 1000) + ' : ' + IntToStr(Progress.Position) + ' of ' + IntToStr(Progress.Max));
+  {$ifndef cgeapp}
+  Application.ProcessMessages;
+  {$else}
+  Application.ProcessAllMessages;
+  {$endif}
   inherited;
 end;
 
@@ -114,7 +132,7 @@ begin
   LoadScene(SceneFile);
   ProcTimer := CastleGetTickCount64 - ProcTimer;
   WriteLnLog('ProcTimer (LoadScene) = ' + FormatFloat('####0.000', ProcTimer / 1000) + ' seconds');
-  LabelSceneLoad.Caption := 'LoadScene = ' + FormatFloat('####0.000', ProcTimer / 1000) + ' seconds'
+  LabelSceneLoad.Caption := 'LoadScene = ' + FormatFloat('####0.000', ProcTimer / 1000) + ' seconds';
 end;
 
 procedure TCastleApp.CreateButton(var objButton: TCastleButton; const ButtonText: String; const Line: Integer; const ButtonCode: TNotifyEvent = nil);
@@ -144,6 +162,7 @@ end;
 
 procedure TCastleApp.LoadViewport;
 begin
+WriteLnLog('LoadViewport #1 : ' + FormatFloat('####0.000', (CastleGetTickCount64 - AppTime) / 1000) + ' : ');
   // Set up the main viewport
   Viewport := TCastleViewport.Create(Application);
   // Use all the viewport
@@ -168,35 +187,59 @@ begin
   CreateLabel(LabelFPS, 1);
   CreateLabel(LabelRender, 0);
   CreateButton(PointlessButton, 'The Completely Pointless Load Botton', 5, @PointlessButtonClick);
+  WriteLnLog('LoadViewport #2 : ' + FormatFloat('####0.000', (CastleGetTickCount64 - AppTime) / 1000) + ' : ');
 end;
 
 procedure TCastleApp.LoadScene(filename: String);
 var
   ProfileStart: TCastleProfilerTime;
 begin
-  Progress.Init(100, 'Preparing Scene');
+  WriteLnLog('LoadScene #1 : ' + FormatFloat('####0.000', (CastleGetTickCount64 - AppTime) / 1000) + ' : ');
+  Progress.Init(20, 'Preparing Scene');
   try
+    Progress.step;
     try
+      WriteLnLog('LoadScene #2 : ' + FormatFloat('####0.000', (CastleGetTickCount64 - AppTime) / 1000) + ' : ');
       ProfileStart := Profiler.Start('Scene loading profile - ' + filename);
+      Progress.step;
+      WriteLnLog('LoadScene #3 : ' + FormatFloat('####0.000', (CastleGetTickCount64 - AppTime) / 1000) + ' : ');
       Progress.Step; // So it's called at least once
+      WriteLnLog('LoadScene #4 : ' + FormatFloat('####0.000', (CastleGetTickCount64 - AppTime) / 1000) + ' : ');
 
       Scene := TCastleScene.Create(Application);
+      Progress.step;
+      WriteLnLog('LoadScene #5 : ' + FormatFloat('####0.000', (CastleGetTickCount64 - AppTime) / 1000) + ' : ');
       Scene.Spatial := [ssStaticCollisions, ssDynamicCollisions, ssRendering];
+      Progress.step;
+      WriteLnLog('LoadScene #6 : ' + FormatFloat('####0.000', (CastleGetTickCount64 - AppTime) / 1000) + ' : ');
       Scene.Load(filename);
-      ProgSteps := Scene.PrepareResourcesSteps;
+      Progress.step;
+      WriteLnLog('LoadScene #7 : ' + FormatFloat('####0.000', (CastleGetTickCount64 - AppTime) / 1000) + ' : ');
       Scene.PrepareResources([prSpatial, prRenderSelf, prRenderClones, prScreenEffects],
           True,
           Viewport.PrepareParams);
+      Progress.step;
+      WriteLnLog('LoadScene #8 : ' + FormatFloat('####0.000', (CastleGetTickCount64 - AppTime) / 1000) + ' : ');
+      ProgSteps := Scene.PrepareResourcesSteps;
+      WriteLnLog('LoadScene #9 : ' + FormatFloat('####0.000', (CastleGetTickCount64 - AppTime) / 1000) + ' : ');
 
       // Add the scene to the viewport
       Viewport.Items.Add(Scene);
+      Progress.step;
+      WriteLnLog('LoadScene #10 : ' + FormatFloat('####0.000', (CastleGetTickCount64 - AppTime) / 1000) + ' : ');
 
       // Tell the control this is the main scene so it gets some lighting
       Viewport.Items.MainScene := Scene;
+      Progress.step;
+      WriteLnLog('LoadScene #11 : ' + FormatFloat('####0.000', (CastleGetTickCount64 - AppTime) / 1000) + ' : ');
 
       Viewport.SetCamera;
+      Progress.step;
+      WriteLnLog('LoadScene #12 : ' + FormatFloat('####0.000', (CastleGetTickCount64 - AppTime) / 1000) + ' : ');
 
       Profiler.Stop(ProfileStart, True);
+      Progress.step;
+      WriteLnLog('LoadScene #13 : ' + FormatFloat('####0.000', (CastleGetTickCount64 - AppTime) / 1000) + ' : ');
     except
       on E : Exception do
         begin
@@ -206,11 +249,14 @@ begin
   finally
     Progress.Fini;
   end;
+  WriteLnLog('LoadScene #14 : ' + FormatFloat('####0.000', (CastleGetTickCount64 - AppTime) / 1000) + ' : ');
 end;
 
 procedure TCastleApp.Start;
 begin
   inherited;
+  AppTime := CastleGetTickCount64;
+  WriteLnLog('Start : ' + FormatFloat('####0.000', (CastleGetTickCount64 - AppTime) / 1000) + ' : ');
   Scene := nil;
   LoadViewport;
   Buffer := SoundEngine.LoadBuffer('castle-data:/music/FurElise.ogg');
@@ -220,6 +266,7 @@ end;
 procedure TCastleApp.Stop;
 begin
   inherited;
+  WriteLnLog('Stop : ' + FormatFloat('####0.000', (CastleGetTickCount64 - AppTime) / 1000) + ' : ');
 end;
 
 procedure TCastleApp.BeforeRender;
@@ -263,36 +310,63 @@ begin
           Scene.Rotation := Vector4(0, 1, 0, theta);
       end;
     end;
+  {$ifdef logall}
+  WriteLnLog('BeforeRender : ' + FormatFloat('####0.000', (CastleGetTickCount64 - AppTime) / 1000) + ' : ');
+  {$endif}
 end;
 
 procedure TCastleApp.Render;
 begin
   inherited;
+  {$ifdef logall}
+  WriteLnLog('Render : ' + FormatFloat('####0.000', (CastleGetTickCount64 - AppTime) / 1000) + ' : ');
+  {$endif}
 end;
 
 procedure TCastleApp.Resize;
 begin
   inherited;
+  {$ifdef logall}
+  WriteLnLog('Resize : ' + FormatFloat('####0.000', (CastleGetTickCount64 - AppTime) / 1000) + ' : ');
+  {$endif}
 end;
 
 procedure TCastleApp.Update(const SecondsPassed: Single; var HandleInput: boolean);
 begin
   inherited;
+  {$ifdef logall}
+  WriteLnLog('Update : ' + FormatFloat('####0.000', (CastleGetTickCount64 - AppTime) / 1000) + ' : ');
+  {$endif}
 end;
 
 function TCastleApp.Motion(const Event: TInputMotion): Boolean;
 begin
   Result := inherited;
+  {$ifdef logall}
+  WriteLnLog('Motion : ' + FormatFloat('####0.000', (CastleGetTickCount64 - AppTime) / 1000) + ' : ');
+  {$endif}
 end;
 
 function TCastleApp.Press(const Event: TInputPressRelease): Boolean;
 begin
   Result := inherited;
+  {$ifdef logall}
+  WriteLnLog('Press : ' + FormatFloat('####0.000', (CastleGetTickCount64 - AppTime) / 1000) + ' : ');
+  {$endif}
+  if Event.IsKey(keyC) then
+    begin
+    Viewport.SetCamera;
+    Exit(True);
+    end;
+
 end;
 
 function    TCastleApp.Release(const Event: TInputPressRelease): Boolean;
 begin
   Result := inherited;
+  {$ifdef logall}
+  WriteLnLog('Release : ' + FormatFloat('####0.000', (CastleGetTickCount64 - AppTime) / 1000) + ' : ');
+  {$endif}
 end;
 
 function TCastleViewportHelper.ViewportToWorld: TVector2;
