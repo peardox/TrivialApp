@@ -15,7 +15,8 @@ implementation
 
 var
   Window: TCastleWindowBase;
-
+  i: Integer;
+  
 { One-time initialization of resources. }
 procedure ApplicationInitialize;
 begin
@@ -59,5 +60,10 @@ initialization
     some necessary resources may not be prepared yet). }
 finalization
   FreeAndNil(AppProgress);
+  for i:= 0 to Length(hallImages) - 1 do
+    begin
+      FreeAndNil(imgCache[i]);
+    end;
+  SetLength(imgCache, 0);
 end.
 

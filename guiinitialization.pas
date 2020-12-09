@@ -12,7 +12,7 @@ uses
   CastleSceneCore, CastleScene, CastleTransform,
   CastleViewport, CastleCameras,
   X3DNodes, X3DFields, X3DTIme,
-  CastleImages,
+  CastleImages, CastleGLImages,
   CastleApplicationProperties, CastleLog, CastleTimeUtils, CastleKeysMouse;
 
 type
@@ -59,8 +59,15 @@ begin
 end;
 
 procedure TCastleForm.WindowClose(Sender: TObject);
+var
+  i: Integer;
 begin
   FreeAndNil(AppProgress);
+  for i:= 0 to Length(hallImages) - 1 do
+    begin
+      FreeAndNil(imgCache[i]);
+    end;
+  SetLength(imgCache, 0);
 end;
 
 end.

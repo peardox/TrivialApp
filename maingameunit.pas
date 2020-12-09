@@ -17,7 +17,7 @@ uses
   CastleSceneCore, CastleScene, CastleTransform,
   CastleViewport, CastleCameras,
   X3DNodes, X3DFields, X3DTIme,
-  CastleImages, CastleSoundEngine,
+  CastleImages, CastleGLImages, CastleSoundEngine,
   CastleApplicationProperties, CastleLog, CastleTimeUtils, CastleKeysMouse;
 
 type
@@ -65,6 +65,7 @@ type
     procedure Stop; override; // TUIState
     procedure LoadViewport;
     procedure LoadScene(filename: String);
+    procedure preCacheImages;
   end;
 
 var
@@ -73,11 +74,19 @@ var
   ProgSteps: Cardinal;
   CastleApp: TCastleApp;
   AppProgress: TAppProgress;
+  imgCache: Array of TDrawableImage;
 
 const
   RotateScene: Boolean = False;
   SecsPerRot: Single = 12;
   SceneFile: String = 'castle-data:/exebition_hall/scene.gltf';
+  hallImages: Array[0..4] of String = (
+              'castle-data:/exebition_hall/textures/Exebition_hall.1001_baseColor.jpg',
+              'castle-data:/exebition_hall/textures/Exebition_hall.1002_baseColor.jpg',
+              'castle-data:/exebition_hall/textures/Exebition_hall.1003_baseColor.jpg',
+              'castle-data:/exebition_hall/textures/Exebition_hall.1004_baseColor.jpg',
+              'castle-data:/exebition_hall/textures/Exebition_hall.1005_baseColor.jpg'
+              );
 
 implementation
 {$ifdef cgeapp}
@@ -88,7 +97,7 @@ uses GUIInitialization;
 
 procedure TAppProgress.Update(Progress: TProgress);
 begin
-  // Investigate CastleSceneCode #7767
+  // Investigate CastleSceneCode #7767 + CastleScene #1216
   CastleApp.LabelProgress.Caption := 'Progress : ' + FormatFloat('####0.000', (CastleGetTickCount64 - AppTime) / 1000) + ' : ' + IntToStr(Progress.Position) + ' of ' + IntToStr(Progress.Max);
   WriteLnLog('Progress Update : ' + FormatFloat('####0.000', (CastleGetTickCount64 - AppTime) / 1000) + ' : ' + IntToStr(Progress.Position) + ' of ' + IntToStr(Progress.Max));
   {$ifndef cgeapp}
@@ -160,9 +169,21 @@ begin
   InsertFront(objLabel);
 end;
 
+procedure TCastleApp.preCacheImages;
+var
+  i: Integer;
+begin
+  SetLength(imgCache, Length(hallImages));
+  for i:= 0 to Length(hallImages) - 1 do
+    begin
+      imgCache[i] := TDrawableImage.Create(hallImages[i], [], 0, 0);
+      imgCache[i].PrepareResources;
+    end;
+end;
+
 procedure TCastleApp.LoadViewport;
 begin
-WriteLnLog('LoadViewport #1 : ' + FormatFloat('####0.000', (CastleGetTickCount64 - AppTime) / 1000) + ' : ');
+  WriteLnLog('LoadViewport #1 : ' + FormatFloat('####0.000', (CastleGetTickCount64 - AppTime) / 1000) + ' : ');
   // Set up the main viewport
   Viewport := TCastleViewport.Create(Application);
   // Use all the viewport
@@ -188,6 +209,8 @@ WriteLnLog('LoadViewport #1 : ' + FormatFloat('####0.000', (CastleGetTickCount64
   CreateLabel(LabelRender, 0);
   CreateButton(PointlessButton, 'The Completely Pointless Load Botton', 5, @PointlessButtonClick);
   WriteLnLog('LoadViewport #2 : ' + FormatFloat('####0.000', (CastleGetTickCount64 - AppTime) / 1000) + ' : ');
+  preCacheImages;
+  WriteLnLog('preCacheImages : ' + FormatFloat('####0.000', (CastleGetTickCount64 - AppTime) / 1000) + ' : ');
 end;
 
 procedure TCastleApp.LoadScene(filename: String);
@@ -195,7 +218,9 @@ var
   ProfileStart: TCastleProfilerTime;
 begin
   WriteLnLog('LoadScene #1 : ' + FormatFloat('####0.000', (CastleGetTickCount64 - AppTime) / 1000) + ' : ');
-  Progress.Init(20, 'Preparing Scene');
+  Progress.UpdateDelay := 0.1;
+  Progress.UpdatePart := 30;
+  Progress.Init(30, 'Preparing Scene');
   try
     Progress.step;
     try
