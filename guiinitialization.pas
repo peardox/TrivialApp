@@ -38,6 +38,7 @@ begin
   WindowState := wsFullScreen;
   {$endif}
   GLIsReady := False;
+  PrepDone := False;
   Profiler.Enabled := true;
   InitializeLog;
   Caption := 'Basic CGE Lazarus Application';
@@ -50,6 +51,7 @@ end;
 procedure TCastleForm.WindowOpen(Sender: TObject);
 begin
   GLIsReady := True;
+  imgCache := nil;
   TCastleControlBase.MainControl := Window;
   CastleApp := TCastleApp.Create(Application);
   TUIState.Current := CastleApp;
@@ -63,11 +65,14 @@ var
   i: Integer;
 begin
   FreeAndNil(AppProgress);
-  for i:= 0 to Length(hallImages) - 1 do
+  if not (imgCache = nil) then
     begin
-      FreeAndNil(imgCache[i]);
+      for i:= 0 to Length(imgCache) - 1 do
+        begin
+          FreeAndNil(imgCache[i]);
+        end;
+      SetLength(imgCache, 0);
     end;
-  SetLength(imgCache, 0);
 end;
 
 end.

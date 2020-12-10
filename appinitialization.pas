@@ -23,7 +23,9 @@ begin
   Profiler.Enabled := true;
   if not IsLibrary then
     InitializeLog;
-  GLIsReady := true;
+  imgCache := nil;
+  GLIsReady := True;
+  PrepDone := False;
   CastleApp := TCastleApp.Create(Application);
   TUIState.Current := CastleApp;
   Window.Container.UIScaling := usDpiScale;
@@ -60,10 +62,13 @@ initialization
     some necessary resources may not be prepared yet). }
 finalization
   FreeAndNil(AppProgress);
-  for i:= 0 to Length(hallImages) - 1 do
+  if not (imgCache = nil) then
     begin
-      FreeAndNil(imgCache[i]);
+      for i:= 0 to Length(imgCache) - 1 do
+        begin
+          FreeAndNil(imgCache[i]);
+        end;
+      SetLength(imgCache, 0);
     end;
-  SetLength(imgCache, 0);
 end.
 

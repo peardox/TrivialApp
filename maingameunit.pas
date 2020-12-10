@@ -70,6 +70,7 @@ type
 
 var
   AppTime: Int64;
+  PrepDone: Boolean;
   GLIsReady: Boolean;
   ProgSteps: Cardinal;
   CastleApp: TCastleApp;
@@ -177,8 +178,9 @@ begin
   for i:= 0 to Length(hallImages) - 1 do
     begin
       imgCache[i] := TDrawableImage.Create(hallImages[i], [], 0, 0);
-      imgCache[i].PrepareResources;
+//      imgCache[i].PrepareResources;
     end;
+  Viewport.PrepareResources('Caching Images');
 end;
 
 procedure TCastleApp.LoadViewport;
@@ -209,8 +211,6 @@ begin
   CreateLabel(LabelRender, 0);
   CreateButton(PointlessButton, 'The Completely Pointless Load Botton', 5, @PointlessButtonClick);
   WriteLnLog('LoadViewport #2 : ' + FormatFloat('####0.000', (CastleGetTickCount64 - AppTime) / 1000) + ' : ');
-  preCacheImages;
-  WriteLnLog('preCacheImages : ' + FormatFloat('####0.000', (CastleGetTickCount64 - AppTime) / 1000) + ' : ');
 end;
 
 procedure TCastleApp.LoadScene(filename: String);
@@ -284,8 +284,10 @@ begin
   WriteLnLog('Start : ' + FormatFloat('####0.000', (CastleGetTickCount64 - AppTime) / 1000) + ' : ');
   Scene := nil;
   LoadViewport;
-  Buffer := SoundEngine.LoadBuffer('castle-data:/music/FurElise.ogg');
-  SoundEngine.PlaySound(Buffer);
+//  Buffer := SoundEngine.LoadBuffer('castle-data:/music/FurElise.ogg');
+//  SoundEngine.PlaySound(Buffer);
+//  PointlessButtonClick(nil);
+  PrepDone := True;
 end;
 
 procedure TCastleApp.Stop;
@@ -300,6 +302,15 @@ var
   Pos, Dir, Up: TVector3;
 begin
   inherited;
+  if PrepDone and GLInitialized then
+    begin
+      PrepDone := False;
+//      preCacheImages;
+    PointlessButtonClick(nil);
+    WriteLnLog('Scene Loaded (displayed?) : ' + FormatFloat('####0.000', (CastleGetTickCount64 - AppTime) / 1000));
+    Application.Terminate;
+    end;
+
   LabelFPS.Caption := 'FPS = ' + FormatFloat('####0.00', Container.Fps.RealFps);
   LabelRender.Caption := 'Render = ' + FormatFloat('####0.00', Container.Fps.OnlyRenderFps);
 
