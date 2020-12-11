@@ -1,7 +1,7 @@
 unit MainGameUnit;
 
 {$mode objfpc}{$H+}
-// {$define logall}
+ {$define logall}
 
 interface
 
@@ -17,7 +17,9 @@ uses
   CastleSceneCore, CastleScene, CastleTransform,
   CastleViewport, CastleCameras,
   X3DNodes, X3DFields, X3DTIme,
-  CastleImages, CastleGLImages, CastleSoundEngine,
+  CastleImages, CastleGLImages,
+  CastleTextureImages, CastleCompositeImage, // For Caching textures
+  CastleSoundEngine,
   CastleApplicationProperties, CastleLog, CastleTimeUtils, CastleKeysMouse;
 
 type
@@ -65,29 +67,20 @@ type
     procedure Stop; override; // TUIState
     procedure LoadViewport;
     procedure LoadScene(filename: String);
-    procedure preCacheImages;
   end;
 
 var
   AppTime: Int64;
   PrepDone: Boolean;
-  GLIsReady: Boolean;
   ProgSteps: Cardinal;
   CastleApp: TCastleApp;
   AppProgress: TAppProgress;
-  imgCache: Array of TDrawableImage;
+  RenderReady: Boolean;
 
 const
   RotateScene: Boolean = False;
   SecsPerRot: Single = 12;
   SceneFile: String = 'castle-data:/exebition_hall/scene.gltf';
-  hallImages: Array[0..4] of String = (
-              'castle-data:/exebition_hall/textures/Exebition_hall.1001_baseColor.jpg',
-              'castle-data:/exebition_hall/textures/Exebition_hall.1002_baseColor.jpg',
-              'castle-data:/exebition_hall/textures/Exebition_hall.1003_baseColor.jpg',
-              'castle-data:/exebition_hall/textures/Exebition_hall.1004_baseColor.jpg',
-              'castle-data:/exebition_hall/textures/Exebition_hall.1005_baseColor.jpg'
-              );
 
 implementation
 {$ifdef cgeapp}
@@ -168,19 +161,6 @@ begin
   else
     objLabel.Anchor(vpTop, -(10 + (Line * 35)));
   InsertFront(objLabel);
-end;
-
-procedure TCastleApp.preCacheImages;
-var
-  i: Integer;
-begin
-  SetLength(imgCache, Length(hallImages));
-  for i:= 0 to Length(hallImages) - 1 do
-    begin
-      imgCache[i] := TDrawableImage.Create(hallImages[i], [], 0, 0);
-//      imgCache[i].PrepareResources;
-    end;
-  Viewport.PrepareResources('Caching Images');
 end;
 
 procedure TCastleApp.LoadViewport;
@@ -279,19 +259,24 @@ end;
 
 procedure TCastleApp.Start;
 begin
+  {$ifdef logall}
+  WriteLnLog('UI.Start : ' + FormatFloat('####0.000', (CastleGetTickCount64 - AppTime) / 1000) + ' : ');
+  {$endif}
   inherited;
-  AppTime := CastleGetTickCount64;
+  LogTextureCache := True;
   WriteLnLog('Start : ' + FormatFloat('####0.000', (CastleGetTickCount64 - AppTime) / 1000) + ' : ');
   Scene := nil;
   LoadViewport;
+  PrepDone := True;
 //  Buffer := SoundEngine.LoadBuffer('castle-data:/music/FurElise.ogg');
 //  SoundEngine.PlaySound(Buffer);
-//  PointlessButtonClick(nil);
-  PrepDone := True;
 end;
 
 procedure TCastleApp.Stop;
 begin
+  {$ifdef logall}
+  WriteLnLog('UI.Stop : ' + FormatFloat('####0.000', (CastleGetTickCount64 - AppTime) / 1000) + ' : ');
+  {$endif}
   inherited;
   WriteLnLog('Stop : ' + FormatFloat('####0.000', (CastleGetTickCount64 - AppTime) / 1000) + ' : ');
 end;
@@ -301,16 +286,10 @@ var
   theta: Single;
   Pos, Dir, Up: TVector3;
 begin
+  {$ifdef logall}
+  WriteLnLog('BeforeRender : ' + FormatFloat('####0.000', (CastleGetTickCount64 - AppTime) / 1000) + ' : ');
+  {$endif}
   inherited;
-  if PrepDone and GLInitialized then
-    begin
-      PrepDone := False;
-//      preCacheImages;
-    PointlessButtonClick(nil);
-    WriteLnLog('Scene Loaded (displayed?) : ' + FormatFloat('####0.000', (CastleGetTickCount64 - AppTime) / 1000));
-    Application.Terminate;
-    end;
-
   LabelFPS.Caption := 'FPS = ' + FormatFloat('####0.00', Container.Fps.RealFps);
   LabelRender.Caption := 'Render = ' + FormatFloat('####0.00', Container.Fps.OnlyRenderFps);
 
@@ -346,17 +325,26 @@ begin
           Scene.Rotation := Vector4(0, 1, 0, theta);
       end;
     end;
-  {$ifdef logall}
-  WriteLnLog('BeforeRender : ' + FormatFloat('####0.000', (CastleGetTickCount64 - AppTime) / 1000) + ' : ');
-  {$endif}
 end;
 
 procedure TCastleApp.Render;
 begin
-  inherited;
   {$ifdef logall}
   WriteLnLog('Render : ' + FormatFloat('####0.000', (CastleGetTickCount64 - AppTime) / 1000) + ' : ');
   {$endif}
+  inherited;
+
+  if PrepDone and GLInitialized and RenderReady then
+    begin
+      {$ifndef cgeapp}
+      Application.ProcessMessages;
+      {$endif}
+      PrepDone := False;
+      PointlessButtonClick(nil);
+      WriteLnLog('Scene Loaded (displayed?) : ' + FormatFloat('####0.000', (CastleGetTickCount64 - AppTime) / 1000));
+      Application.Terminate;
+    end;
+  RenderReady := True;
 end;
 
 procedure TCastleApp.Resize;

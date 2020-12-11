@@ -15,17 +15,15 @@ implementation
 
 var
   Window: TCastleWindowBase;
-  i: Integer;
   
 { One-time initialization of resources. }
 procedure ApplicationInitialize;
 begin
-  Profiler.Enabled := true;
   if not IsLibrary then
     InitializeLog;
-  imgCache := nil;
-  GLIsReady := True;
+  RenderReady := False;
   PrepDone := False;
+  Profiler.Enabled := true;
   CastleApp := TCastleApp.Create(Application);
   TUIState.Current := CastleApp;
   Window.Container.UIScaling := usDpiScale;
@@ -37,6 +35,7 @@ initialization
   { Set ApplicationName early, as our log uses it.
     Optionally you could also set ApplicationProperties.Version here. }
   ApplicationProperties.ApplicationName := 'Basic';
+  AppTime := CastleGetTickCount64;
 
   { Start logging. Do this as early as possible,
     to log information and eventual warnings during initialization.
@@ -62,13 +61,5 @@ initialization
     some necessary resources may not be prepared yet). }
 finalization
   FreeAndNil(AppProgress);
-  if not (imgCache = nil) then
-    begin
-      for i:= 0 to Length(imgCache) - 1 do
-        begin
-          FreeAndNil(imgCache[i]);
-        end;
-      SetLength(imgCache, 0);
-    end;
 end.
 

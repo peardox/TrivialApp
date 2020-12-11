@@ -34,10 +34,11 @@ implementation
 
 procedure TCastleForm.FormCreate(Sender: TObject);
 begin
+  WriteLnLog('FormCreate : ' + FormatFloat('####0.000', (CastleGetTickCount64 - AppTime) / 1000) + ' : ');
   {$ifdef darwin}
   WindowState := wsFullScreen;
   {$endif}
-  GLIsReady := False;
+  AppTime := CastleGetTickCount64;
   PrepDone := False;
   Profiler.Enabled := true;
   InitializeLog;
@@ -46,12 +47,13 @@ end;
 
 procedure TCastleForm.FormDestroy(Sender: TObject);
 begin
+  WriteLnLog('FormDestroy : ' + FormatFloat('####0.000', (CastleGetTickCount64 - AppTime) / 1000) + ' : ');
 end;
 
 procedure TCastleForm.WindowOpen(Sender: TObject);
 begin
-  GLIsReady := True;
-  imgCache := nil;
+  WriteLnLog('WindowOpen : ' + FormatFloat('####0.000', (CastleGetTickCount64 - AppTime) / 1000) + ' : ');
+  RenderReady := False;
   TCastleControlBase.MainControl := Window;
   CastleApp := TCastleApp.Create(Application);
   TUIState.Current := CastleApp;
@@ -61,18 +63,9 @@ begin
 end;
 
 procedure TCastleForm.WindowClose(Sender: TObject);
-var
-  i: Integer;
 begin
+  WriteLnLog('WindowClose : ' + FormatFloat('####0.000', (CastleGetTickCount64 - AppTime) / 1000) + ' : ');
   FreeAndNil(AppProgress);
-  if not (imgCache = nil) then
-    begin
-      for i:= 0 to Length(imgCache) - 1 do
-        begin
-          FreeAndNil(imgCache[i]);
-        end;
-      SetLength(imgCache, 0);
-    end;
 end;
 
 end.
