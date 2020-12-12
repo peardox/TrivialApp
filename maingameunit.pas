@@ -20,16 +20,9 @@ uses
   X3DNodes, X3DFields, X3DTIme,
   CastleImages, CastleGLImages,
   CastleTextureImages, CastleCompositeImage, // For Caching textures
-  CastleSoundEngine,
   CastleApplicationProperties, CastleLog, CastleTimeUtils, CastleKeysMouse;
 
 type
-  TCastleViewportHelper = class helper for TCastleViewport
-  public
-    function ViewportToWorld: TVector2;
-    procedure SetCamera(const AWidth: Single = 1; const AHeight: Single = 1; const Depth: Single = 1.0);
-  end;
-
   { ProgressInterface }
   TAppProgress = class(TProgressNullInterface)
     procedure Init(Progress: TProgress); override;
@@ -58,8 +51,6 @@ type
     LabelCamUp: TCastleLabel;
     LabelRender: TCastleLabel;
     LabelSceneLoad: TCastleLabel;
-    WalkNavigation: TCastleWalkNavigation;
-//    Buffer: TSoundBuffer;
   public
     procedure PointlessButtonClick(Sender: TObject);
     procedure CreateButton(var objButton: TCastleButton; const ButtonText: String; const Line: Integer; const ButtonCode: TNotifyEvent = nil);
@@ -172,12 +163,9 @@ begin
   // Use all the viewport
   Viewport.FullSize := true;
   // Automatically position the camera
-  Viewport.AutoCamera := False;
-  // Use walk navigation keys
-  Viewport.AutoNavigation := False;
-  WalkNavigation := TCastleWalkNavigation.Create(FreeAtStop);
-  WalkNavigation.MoveSpeed := 2.0;
-  Viewport.Navigation := WalkNavigation;
+  Viewport.AutoCamera := True;
+  // Use auto navigation keys
+  Viewport.AutoNavigation := True;
 
   // Add the viewport to the CGE control
   InsertFront(Viewport);
@@ -239,7 +227,6 @@ begin
       Progress.step;
       WriteLnLog('LoadScene #11 : ' + FormatFloat('####0.000', (CastleGetTickCount64 - AppTime) / 1000) + ' : ');
 
-      Viewport.SetCamera;
       Progress.step;
       WriteLnLog('LoadScene #12 : ' + FormatFloat('####0.000', (CastleGetTickCount64 - AppTime) / 1000) + ' : ');
 
@@ -269,8 +256,6 @@ begin
   Scene := nil;
   LoadViewport;
   PrepDone := True;
-//  Buffer := SoundEngine.LoadBuffer('castle-data:/music/FurElise.ogg');
-//  SoundEngine.PlaySound(Buffer);
 end;
 
 procedure TCastleApp.Stop;
@@ -377,96 +362,14 @@ begin
   {$ifdef logall}
   WriteLnLog('Press : ' + FormatFloat('####0.000', (CastleGetTickCount64 - AppTime) / 1000) + ' : ');
   {$endif}
-  if Event.IsKey(keyC) then
-    begin
-    Viewport.SetCamera;
-    Exit(True);
-    end;
-
 end;
 
-function    TCastleApp.Release(const Event: TInputPressRelease): Boolean;
+function TCastleApp.Release(const Event: TInputPressRelease): Boolean;
 begin
   Result := inherited;
   {$ifdef logall}
   WriteLnLog('Release : ' + FormatFloat('####0.000', (CastleGetTickCount64 - AppTime) / 1000) + ' : ');
   {$endif}
-end;
-
-function TCastleViewportHelper.ViewportToWorld: TVector2;
-var
-  Vect1, Vect2:  TVector3;
-begin
-  if not PositionToWorldPlane(Vector2(RenderRect.Left, RenderRect.Bottom), True, 0, Vect1) then
-    Exit(Vector2(0, 0));
-
-  if not PositionToWorldPlane(Vector2(RenderRect.Width, RenderRect.Height), True, 0, Vect2) then
-    Exit(Vector2(0, 0));
-
-  Result.X := Round((Max(Vect1.X, Vect2.X) - Min(Vect1.X, Vect2.X)) * 1000) / 1000;
-  Result.Y := Round((Max(Vect1.Y, Vect2.Y) - Min(Vect1.Y, Vect2.Y)) * 1000) / 1000;
-
-  if (Result.X = 0) or (Result.Y = 0) then
-    Exit(Vector2(0, 0));
-
-end;
-
-procedure TCastleViewportHelper.SetCamera(const AWidth: Single = 1; const AHeight: Single = 1; const Depth: Single = 1.0);
-var
-  FOVA: TFieldOfViewAxis;
-  Theta: Single;
-  s2w: TVector2;
-begin
-  if not RenderRect.IsEmpty then
-  begin
-    if Depth <= 0 then
-      Exit;
-
-    s2w := ViewportToWorld;
-
-    if s2w.IsZero then
-      begin
-        if(RenderRect.Width < RenderRect.Height) then
-          s2w := Vector2(AWidth, AHeight)
-        else
-          s2w := Vector2(AHeight, AWidth)
-      end;
-
-    if (s2w.X > AWidth) and (s2w.Y > AHeight) then
-      begin
-        FOVA := faHorizontal;
-        Theta := ArcTan2((1 / Depth), (1 / AWidth)) * 2;
-      end
-    else if (s2w.X < AWidth) then
-      begin
-        FOVA := faHorizontal;
-        Theta := ArcTan2((1 / Depth), (1 / AWidth)) * 2;
-      end
-    else if (s2w.Y < AHeight) then
-      begin
-        FOVA := faVertical;
-        Theta := ArcTan2((1 / Depth), (1 / AHeight)) * 2;
-      end
-    else  if (AWidth < s2w.X) then
-      begin
-        FOVA := faVertical;
-        Theta := ArcTan2((1 / Depth), (1 / AHeight)) * 2;
-      end
-    else  if (AHeight < s2w.Y) then
-      begin
-        FOVA := faHorizontal;
-        Theta := ArcTan2((1 / Depth), (1 / AWidth)) * 2;
-      end
-    else
-      begin
-        FOVA := faHorizontal;
-        Theta := ArcTan2((1 / Depth), (1 / AWidth)) * 2;
-      end;
-
-    Camera.Perspective.FieldOfView := Theta;
-    Camera.SetView(Vector3(0, 0, 1 / ((1 / Depth) * 2)), Vector3(0, 0, -1), Vector3(0, 1, 0));
-    Camera.Perspective.FieldOfViewAxis := FOVA;
-  end;
 end;
 
 end.
